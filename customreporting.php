@@ -21,10 +21,9 @@ add_action('admin_menu', 'stock_report_admin_menu');
 
 /*
 * Basic functionality to create the stock report administration menu
-* TODO: fix this up a bit? make it cleaner? add a construct and a 'die if reached directly' 
 */
 function stock_report_admin_menu() {
-	add_menu_page('Custom Stock Repot', 'Custom Stock Report', 'administrator', 'stock_report', 'admin_stock_report_page');
+	add_submenu_page( 'woocommerce', 'Advanced Reports', 'Advanced Reports', 'manage_options', 'stock_report', 'admin_stock_report_page' );
 }
 
 /*
@@ -41,6 +40,11 @@ function admin_stock_report_page() {
 		    <p>Make your selection and click 'Submit' to prepare a table of results</p>
 		    <div class="wrap">
 		    	<form method="post" id="advanced_report" action="">
+		    		Show Sku: (Not Working yet) <input type="checkbox" name="sku" value="checked"/> <br/>
+		    		Order: (Not Working Yet) <select name="order">
+		    			<option value="asc">Ascending</option>
+		    			<option value="desc">Descending</option>
+		    		</select>
 		    		<?php submit_button('Stock Report', 'primary', 'submit'); ?>
 		    	</form>
 		    </div>
