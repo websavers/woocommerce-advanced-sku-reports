@@ -5,17 +5,15 @@
  * Plugin URI: https://plugins.websavers.ca/wc_csr
  * Author: Moe Saidi / Websaavers, Inc.
  * Author URI: https://moe.saidi.ca / https://websavers.ca
- * Version: 0.1a
+ * Version: 0.4a
  * License: GPL2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: watchlist-textdomain
 == 
 */
 
- 
 /*
 * Create a top level menu for now
-* TODO: Menu should be sub to wooCommerce
 */
 add_action('admin_menu', 'stock_report_admin_menu');
 
@@ -40,8 +38,10 @@ function admin_stock_report_page() {
 		    <p>Make your selection and click 'Submit' to prepare a table of results</p>
 		    <div class="wrap">
 		    	<form method="post" id="advanced_report" action="">
-		    		Show Sku: (Not Working yet) <input type="checkbox" name="sku" value="checked"/> <br/>
-		    		Order: (Not Working Yet) <select name="order">
+				Sort by SKU: <input type="checkbox" name="sort-sku" value="checked"/> <br />
+					Sort by Name: <input type="checkbox" name="sort-name"/><br />
+					Sort by Quantity: <input type="Checkbox" name="sort-quantity"/><br />
+		    		Order: <select name="order">
 		    			<option value="asc">Ascending</option>
 		    			<option value="desc">Descending</option>
 		    		</select>
@@ -130,5 +130,8 @@ function generate_stock_report_sku_asc() {
 		var_dump($row);
 	endwhile;
 
-
+	?>
+	<!-- Outputting version # to make sure on each change I'm testing against latest version -->
+	Version 0.9a 
+	<?php
 }
