@@ -92,7 +92,7 @@ function generate_stock_report_sku_asc() {
 	<table border="0" align="left" width="40%">
 		<tr><th>SKU</th>
 			<th>Product</th>
-			<th>QUantity</th>
+			<th>Quantity</th>
 	<?php
 	$loop = new WP_Query ($args);
 	while($loop->have_posts()) : $loop->the_post();
@@ -129,9 +129,5 @@ function generate_stock_report_sku_asc() {
 		$row = array( $product->get_title() . ', ' . get_the_title( $product->variation_id ), $product->stock );
 		var_dump($row);
 	endwhile;
-
-	?>
-	<!-- Outputting version # to make sure on each change I'm testing against latest version -->
-	Version 0.9a 
-	<?php
+	
 }
