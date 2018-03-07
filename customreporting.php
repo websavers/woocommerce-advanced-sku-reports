@@ -8,33 +8,57 @@
  * Version: 0.5a
  * License: GPL2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: skureports-textdomain
+ * Text Domain: wcasr
 == 
 */
 
 /*
 * Create a top level menu for now
 */
-add_action('admin_menu', 'stock_report_admin_menu');
-
 /*
-* Basic functionality to create the stock report administration menu
-*/
+add_action('admin_menu', 'stock_report_admin_menu');
 function stock_report_admin_menu() {
 	add_submenu_page( 'woocommerce', 'Advanced Reports', 'Advanced Reports', 'manage_options', 'stock_report', 'admin_stock_report_page' );
+}
+*/
+
+/*
+add_action( 'wc_reports_tabs', 'wcasr_add_settings_tab', 50 );
+
+function wcasr_add_settings_tab() {
+	echo '<a href="' . admin_url( 'admin.php?page=wc-reports&tab=' . urlencode( $key ) ) . '" class="nav-tab ';
+	if ( $current_tab == $key ) {
+		echo 'nav-tab-active';
+	}
+	echo '">' . esc_html( $report_group['title'] ) . '</a>';
+			
+	$settings_tabs['settings_tab_demo'] = __( 'Inventory', 'wcasr' );
+	return $settings_tabs;
+}
+*/
+
+add_filter( 'woocommerce_admin_reports', 'wcasr_add_sku_report' );
+function wcasr_add_sku_report($reports){
+	$reports['stock']['reports']['all_by_sku'] = array(
+      'title'       => __( 'All stock by SKU', 'wcasr' ),
+      'description' => '',
+      'hide_title'  => true,
+      'callback'    => 'wcasr_admin_stock_report_page',
+	);
+	return $reports;
 }
 
 /*
 * Basic page creation
 * TODO: Include options and a form submission
 */
-function admin_stock_report_page() {
+function wcasr_admin_stock_report_page() {
 	
 	global $plugin_page;
 	if (!isset($_POST['submit'])){
 		?>
 		<div class="wrap">
-		    <h2>Websavers (WooCommerce) Advanced Stock Reporting</h2>
+		    <!--<h2>Websavers (WooCommerce) Advanced Stock Reporting</h2>-->
 		    <p>Make your selection and click 'Submit' to prepare a table of results</p>
 		    <div class="wrap">
 		    	<form method="post" id="advanced_report" action="">
@@ -66,7 +90,7 @@ function admin_stock_report_page() {
 /*
 * I gave up trying 
 */
-function generate_stock_report_sku_asc() {
+function wcasr_generate_stock_report_sku_asc() {
 	$args=array(
 		'post_type'			=>	'product',
 		'post_status'		=>	'publish',
