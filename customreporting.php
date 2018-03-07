@@ -1,14 +1,14 @@
 <?php
 /**
- * Plugin Name: WooCommerce Custom Stock Reporting
- * Description: Provides ability to customize the Admin Stock reporting of WooCommerce
+ * Plugin Name: WooCommerce Advanced SKU Reports
+ * Description: WooCommerce inventory report with SKU sort
  * Plugin URI: https://plugins.websavers.ca/wc_csr
- * Author: Moe Saidi / Websaavers, Inc.
- * Author URI: https://moe.saidi.ca / https://websavers.ca
- * Version: 0.4a
+ * Author: Moe Saidi @ Websavers Inc.
+ * Author URI: https://websavers.ca
+ * Version: 0.5a
  * License: GPL2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: watchlist-textdomain
+ * Text Domain: skureports-textdomain
 == 
 */
 
