@@ -2,10 +2,10 @@
 /**
  * Plugin Name: WooCommerce Advanced SKU Reports
  * Description: WooCommerce inventory report with SKU sort
- * Plugin URI: https://plugins.websavers.ca/wc_csr
- * Author: Moe Saidi @ Websavers Inc.
+ * Plugin URI: https://websavers.ca
+ * Author: Websavers Inc.
  * Author URI: https://websavers.ca
- * Version: 0.5a
+ * Version: 1.0
  * License: GPL2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wcasr
