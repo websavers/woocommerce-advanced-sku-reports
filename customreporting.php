@@ -12,146 +12,167 @@
 == 
 */
 
-/*
-* Create a top level menu for now
-*/
-/*
-add_action('admin_menu', 'stock_report_admin_menu');
-function stock_report_admin_menu() {
-	add_submenu_page( 'woocommerce', 'Advanced Reports', 'Advanced Reports', 'manage_options', 'stock_report', 'admin_stock_report_page' );
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly
 }
-*/
 
-/*
-add_action( 'wc_reports_tabs', 'wcasr_add_settings_tab', 50 );
+if ( ! class_exists( 'WC_Report_Stock' ) ) {
+	require_once ABSPATH . 'wp-content/plugins/woocommerce/includes/admin/reports/class-wc-report-stock.php';
+}
 
-function wcasr_add_settings_tab() {
-	echo '<a href="' . admin_url( 'admin.php?page=wc-reports&tab=' . urlencode( $key ) ) . '" class="nav-tab ';
-	if ( $current_tab == $key ) {
-		echo 'nav-tab-active';
-	}
-	echo '">' . esc_html( $report_group['title'] ) . '</a>';
+
+/**
+ * Check if WooCommerce is active
+ **/
+if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
+    // Put your plugin code here
+
+    add_action('woocommerce_loaded' , function (){
 			
-	$settings_tabs['settings_tab_demo'] = __( 'Inventory', 'wcasr' );
-	return $settings_tabs;
-}
-*/
+			add_filter( 'woocommerce_admin_reports', 'wcasr_add_sku_report' );
+			function wcasr_add_sku_report($reports){
+				$reports['stock']['reports']['all_by_sku'] = array(
+						'title'       => __( 'All stock by SKU', 'wcasr' ),
+						'description' => '',
+						'hide_title'  => true,
+						'callback'    => 'wcasr_admin_stock_report_page',
+				);
+				return $reports;
+			}
+			
+			function wcasr_admin_stock_report_page() {
+					$report = new WC_Report_All_Stock();
+					$report->output_report();
+			}
+			
+    });
 
-add_filter( 'woocommerce_admin_reports', 'wcasr_add_sku_report' );
-function wcasr_add_sku_report($reports){
-	$reports['stock']['reports']['all_by_sku'] = array(
-      'title'       => __( 'All stock by SKU', 'wcasr' ),
-      'description' => '',
-      'hide_title'  => true,
-      'callback'    => 'wcasr_admin_stock_report_page',
-	);
-	return $reports;
 }
 
-/*
-* Basic page creation
-* TODO: Include options and a form submission
-*/
-function wcasr_admin_stock_report_page() {
-	
-	global $plugin_page;
-	if (!isset($_POST['submit'])){
-		?>
-		<div class="wrap">
-		    <!--<h2>Websavers (WooCommerce) Advanced Stock Reporting</h2>-->
-		    <p>Make your selection and click 'Submit' to prepare a table of results</p>
-		    <div class="wrap">
-		    	<form method="post" id="advanced_report" action="">
-				Sort by SKU: <input type="checkbox" name="sort-sku" value="checked"/> <br />
-					Sort by Name: <input type="checkbox" name="sort-name"/><br />
-					Sort by Quantity: <input type="Checkbox" name="sort-quantity"/><br />
-		    		Order: <select name="order">
-		    			<option value="asc">Ascending</option>
-		    			<option value="desc">Descending</option>
-		    		</select>
-		    		<?php submit_button('Stock Report', 'primary', 'submit'); ?>
-		    	</form>
-		    </div>
-		</div>
-		<?php 
-	}else{
-		?>
-		<div class="wrap">
-		<h2>Websavers (WooCommerce) Advanced Stock Reporting</h2>
-		<p>Your stock report is outlined below</p>
-		<?php generate_stock_report_sku_asc(); ?>
-		</div>
-		<?php
+class WC_Report_All_Stock extends WC_Report_Stock {
+	/**
+	 * No items found text.
+	 */
+	public function no_items() {
+		_e( 'No products found.', 'wcasr' );
 	}
-}
+	/**
+	 * Get Products matching stock criteria.
+	 *
+	 * @param int $current_page
+	 * @param int $per_page
+	 */
+	public function get_items( $current_page, $per_page ) {
+		global $wpdb;
+		$this->max_items = 0;
+		$this->items     = array();
+		// Get products using a query - this is too advanced for get_posts :(
+		$query_from = apply_filters('woocommerce_report_all_stock_query_from', 
+		"	FROM {$wpdb->posts} as posts
+			INNER JOIN {$wpdb->postmeta} AS postmeta ON posts.ID = postmeta.post_id
+			INNER JOIN {$wpdb->postmeta} AS postmeta2 ON posts.ID = postmeta2.post_id
+			INNER JOIN {$wpdb->postmeta} AS sku ON posts.ID = sku.post_id AND sku.meta_key = '_sku' 
+			WHERE 1=1
+			AND posts.post_type IN ( 'product', 'product_variation' )
+			AND posts.post_status = 'publish'
+			AND postmeta2.meta_key = '_manage_stock' AND postmeta2.meta_value = 'yes'
+			AND postmeta.meta_key = '_stock'
+		"
+		);
+		$this->items     = $wpdb->get_results( $wpdb->prepare( "SELECT sku.meta_value as sku, posts.ID as id, posts.post_parent as parent {$query_from} GROUP BY posts.ID ORDER BY posts.post_title DESC LIMIT %d, %d;", ( $current_page - 1 ) * $per_page, $per_page ) );
+		$this->max_items = $wpdb->get_var( "SELECT COUNT( DISTINCT posts.ID ) {$query_from};" );
+	}
+	
+	/**
+	 * Get columns.
+	 *
+	 * @return array
+	 */
+	public function get_columns() {
+		$columns = array(
+			'sku'					 => __( 'SKU', 'woocommerce' ),
+			'product'      => __( 'Product', 'woocommerce' ),
+			'parent'       => __( 'Parent', 'woocommerce' ),
+			'stock_level'  => __( 'Units in stock', 'woocommerce' ),
+			'stock_status' => __( 'Stock status', 'woocommerce' ),
+			'wc_actions'   => __( 'Actions', 'woocommerce' ),
+		);
+		return $columns;
+	}
+	
+	/**
+	 * Method for name column
+	 *
+	 * @param array $item an array of DB data
+	 *
+	 * @return string
+	 */
 
-
-
-/*
-* I gave up trying 
-*/
-function wcasr_generate_stock_report_sku_asc() {
-	$args=array(
-		'post_type'			=>	'product',
-		'post_status'		=>	'publish',
-		'posts_per_page'	=>	-1,
-		'orderby'			=>	'sku',
-		'order'				=>	'DESC',
-		'meta_query'		=> array(
-			array(
-				'key'		=>	'_manage_stock',
-				'value'		=>	'yes'
-			)
-		),
-		'tax_query'			=>	array(
-			array(
-				'taxonomy'	=>	'product_type',
-				'field'		=>	'slug',
-				'terms'		=>	array('simple'),
-				'operator'	=>	'IN'
-			)
-		)
-	);
-	?>
-	<table border="0" align="left" width="40%">
-		<tr><th>SKU</th>
-			<th>Product</th>
-			<th>Quantity</th>
-	<?php
-	$loop = new WP_Query ($args);
-	while($loop->have_posts()) : $loop->the_post();
+	function column_sku( $item ) {
+	  return '<strong>' . $item->sku . '</strong>';
+	}
+	
+	function column_product( $item ) {
 		global $product;
-		$row = array($product->get_sku(),$product->get_title(),$product->get_stock_quantity());
-		?>
-		<tr align="center"><td><?php echo $row[0]; ?></td>
-		<td><?php echo $row[1]; ?></td>
-		<td><?php echo $row[2]; ?></td></tr>
-		<?php
-	endwhile;
-	echo "</table>";
-
-	$args = array(
-		'post_type'			=> 'product_variation',
-		'post_status' 		=> 'publish',
-        'posts_per_page' 	=> -1,
-        'orderby'			=> 'sku',
-        'order'				=> 'ASC',
-		'meta_query' => array(
-			array(
-				'key' 		=> '_stock',
-				'value' 	=> array('', false, null),
-				'compare' 	=> 'NOT IN'
-			)
-		)
-	);
-	
-	$loop = new WP_Query( $args );
-	while ( $loop->have_posts() ) : $loop->the_post();
-	
-        $product = new WC_Product_Variation( $loop->post->ID );
 		
-		$row = array( $product->get_title() . ', ' . get_the_title( $product->variation_id ), $product->stock );
-		var_dump($row);
-	endwhile;
+		if ( ! $product || $product->get_id() !== $item->id ) {
+			$product = wc_get_product( $item->id );
+		}
+		if ( ! $product ) {
+			return;
+		}
+		echo esc_html( $product->get_name() );
+		// Get variation data.
+		if ( $product->is_type( 'variation' ) ) {
+			echo '<div class="description">' . wp_kses_post( wc_get_formatted_variation( $product, true ) ) . '</div>';
+		}
+	}
 	
+	/**
+	 * Columns to make sortable.
+	 *
+	 * @return array
+	 */
+	public function get_sortable_columns() {
+	  $sortable_columns = array(
+	    'sku' => array( 'sku', true ),
+	    'product' => array( 'product', false ),
+			'stock_level' => array( 'stock_level', true ),
+	  );
+
+	  return $sortable_columns;
+	}
+	
+	function usort_reorder( $a, $b ) {
+	  // If no sort, default to title
+	  $orderby = ( ! empty( $_GET['orderby'] ) ) ? $_GET['orderby'] : 'sku';
+	  // If no order, default to asc
+	  $order = ( ! empty($_GET['order'] ) ) ? $_GET['order'] : 'asc';
+	  // Determine sort order
+	  $result = strcmp( $a->$orderby, $b->$orderby );
+	  // Send final sort direction to usort
+	  return ( $order === 'asc' ) ? $result : -$result;
+	}
+	
+	/*
+	 * Prepare items.
+	 */
+	public function prepare_items() {
+		$this->_column_headers = array( $this->get_columns(), array(), $this->get_sortable_columns() );
+		$current_page          = absint( $this->get_pagenum() );
+		$per_page              = apply_filters( 'woocommerce_admin_stock_report_products_per_page', 20 );
+		$this->get_items( $current_page, $per_page );
+		
+		usort( $this->items, array( &$this, 'usort_reorder' ) );
+		/**
+		 * Pagination.
+		 */
+		$this->set_pagination_args(
+			array(
+				'total_items' => $this->max_items,
+				'per_page'    => $per_page,
+				'total_pages' => ceil( $this->max_items / $per_page ),
+			)
+		);
+	}
 }
