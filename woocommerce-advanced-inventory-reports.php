@@ -112,6 +112,9 @@ class WC_Report_All_Stock extends WC_Report_Stock {
 	  return '<strong>' . $item->sku . '</strong>';
 	}
 	
+  /** Override this to remove the sku from it
+   *  Should make it more efficient
+   */
 	function column_product( $item ) {
 		global $product;
 		
