@@ -3,7 +3,7 @@ Contributors: jas8522, moesaidi, websavers
 Tags: woocommerce, reports, report, sku, inventory
 Requires at least: 4.6
 Tested up to: 4.8
-Stable tag: 4.3
+Stable tag: 1.0
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
