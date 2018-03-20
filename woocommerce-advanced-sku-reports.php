@@ -4,7 +4,7 @@
  * Description: WooCommerce inventory report with SKU sort
  * Author: Websavers Inc.
  * Author URI: https://websavers.ca
- * Version: 1.0
+ * Version: 1.1
  * License: GPL2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wcasr
